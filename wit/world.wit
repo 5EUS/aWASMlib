@@ -1,0 +1,99 @@
+package awasmlib:library;
+
+world library {
+  // -------------------- Fetch Functions --------------------
+
+  /// Generic media discovery for any supported media type.
+  /// Implementors should return an empty list for unsupported types.
+  export fetchmedialist: func(kind: media-type, query: string) -> list<media>;
+
+  /// Generic unit listing for a given media id (e.g. chapters, episodes, sections).
+  export fetchunits: func(mediaid: string) -> list<unit>;
+
+  /// Generic asset retrieval for a given unit id (e.g. pages, images, streams, files).
+  export fetchassets: func(unitid: string) -> list<asset>;
+
+  // -------------------- Other --------------------
+
+  /// Report provider capabilities so the host can adapt behavior.
+  export getcapabilities: func() -> provider-capabilities;
+
+  // -------------------- Types --------------------
+  variant media-type {
+    paged,
+    audio,
+    video,
+    other(string),
+  }
+
+  record media {
+    id: string,
+    mediatype: media-type,
+    title: string,
+    description: option<string>,
+    /// Link to the media page on the provider
+    url: option<string>,
+    /// Optional cover/thumbnail image URL
+    cover-url: option<string>,
+  }
+
+  /// Neutral unit representing a serializable subdivision of a media item.
+  /// Example: chapter (manga/comic), episode (anime/tv), section (book/textbook).
+  variant unit-kind {
+    chapter,
+    episode,
+    section,
+    other(string),
+  }
+
+  record unit {
+    id: string,
+    title: string,
+    /// Raw ordinal label as provided by the source (e.g. "12.5", "Part II")
+    number-text: option<string>,
+    /// Parsed numeric ordinal for sorting when available
+    number: option<f32>,
+    /// ISO language code (e.g. "en")
+    lang: option<string>,
+    /// Optional grouping label such as volume/season/part
+    group: option<string>,
+    /// Optional direct link to the unit page
+    url: option<string>,
+    /// RFC3339/ISO8601 timestamp string if available
+    published-at: option<string>,
+    /// The unit kind
+    kind: unit-kind,
+    /// Uploader group
+    upload-group: option<string>
+  }
+
+  /// Generic asset exposed by a unit (page/image/audio/video/subtitle/file links).
+  variant asset-kind {
+    page,
+    image,
+    audio,
+    video,
+    subtitle,
+    file,
+    other(string),
+  }
+
+  record asset {
+    /// Direct URL to the asset
+    url: string,
+    /// Optional MIME type
+    mime: option<string>,
+    /// Optional pixel width/height (for visual assets)
+    width: option<u32>,
+    height: option<u32>,
+    /// Kind of asset
+    kind: asset-kind,
+  }
+
+  /// Provider capability advertisement for adaptive host behavior.
+  record provider-capabilities {
+    media-types: list<media-type>,
+    unit-kinds: list<unit-kind>,
+    asset-kinds: list<asset-kind>,
+  }
+}
