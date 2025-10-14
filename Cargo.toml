@@ -1,8 +1,11 @@
 [workspace]
-members = ["."]
+members = [
+    ".", 
+    "crates/awasmcli"
+]
 
 [package]
-name = "aWASMlib"
+name = "awasmlib"
 version = "0.1.0"
 edition = "2021"
 description = "Rust and WebAssembly-powered multimedia aggregator library and runtime"
