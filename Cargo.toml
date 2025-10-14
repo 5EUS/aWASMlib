@@ -1,0 +1,30 @@
+[workspace]
+members = ["."]
+
+[package]
+name = "aWASMlib"
+version = "0.1.0"
+edition = "2021"
+description = "Rust and WebAssembly-powered multimedia aggregator library and runtime"
+license = "MIT"
+repository = "https://github.com/5EUS/aWASMlib"
+homepage = "https://github.com/5EUS/aWASMlib"
+readme = "README.md"
+
+[dependencies]
+
+[workspace.dependencies]
+
+[profile.dev]
+opt-level = 0
+debug = true
+codegen-units = 256
+
+[profile.dev.package."*"]
+opt-level = 0
+
+[build-dependencies]
+# wit-bindgen = "0.45"
+
+[dev-dependencies]
+tempfile = "3"
