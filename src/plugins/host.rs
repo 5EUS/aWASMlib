@@ -1,0 +1,29 @@
+use wasmtime_wasi::{WasiCtx, WasiCtxView, WasiView};
+use wasmtime_wasi_http::{WasiHttpCtx, WasiHttpView};
+
+/// WASMTime Host environment for plugins
+pub(crate) struct Host {
+    pub(crate) wasi: WasiCtx,
+    pub(crate) table: wasmtime_wasi::ResourceTable,
+    pub(crate) http: WasiHttpCtx,
+}
+
+/// Implement the necessary traits for the Host struct
+impl WasiView for Host {
+    fn ctx(&mut self) -> WasiCtxView<'_> {
+        WasiCtxView {
+            ctx: &mut self.wasi,
+            table: &mut self.table,
+        }
+    }
+}
+
+/// Implement the necessary traits for the Host struct
+impl WasiHttpView for Host {
+    fn ctx(&mut self) -> &mut WasiHttpCtx {
+        &mut self.http
+    }
+    fn table(&mut self) -> &mut wasmtime_wasi::ResourceTable {
+        &mut self.table
+    }
+}
