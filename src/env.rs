@@ -32,16 +32,27 @@ impl Config {
                 std::fs::create_dir_all(app_support_dir).ok();
                 db_path = Some(app_support_dir.join("awasmlib.db"));
                 std::env::set_var("DATABASE_URL", format!("sqlite://{}", db_path.as_ref().unwrap().to_string_lossy()));
+            } else {
+                // Fallback to a sensible default if ProjectDirs fails
+                let fallback_path = PathBuf::from("awasmlib.db");
+                db_path = Some(fallback_path.clone());
+                std::env::set_var("DATABASE_URL", format!("sqlite://{}", fallback_path.to_string_lossy()));
             }
-        } // default to a SQLite database in the Application Support directory
+        }
 
         if std::env::var("PLUGINS_DIR").is_err() {
             if let Some(proj_dirs) = directories::ProjectDirs::from("com", "fiveeus", "aWASMlib") {
                 plugins_dir = Some(proj_dirs.data_dir().join("plugins"));
                 std::fs::create_dir_all(plugins_dir.as_ref().unwrap()).ok();
                 std::env::set_var("PLUGINS_DIR", plugins_dir.as_ref().unwrap().to_string_lossy().to_string());
+            } else {
+                // Fallback to a sensible default if ProjectDirs fails
+                let fallback_plugins_dir = PathBuf::from("plugins");
+                plugins_dir = Some(fallback_plugins_dir.clone());
+                std::fs::create_dir_all(&fallback_plugins_dir).ok();
+                std::env::set_var("PLUGINS_DIR", fallback_plugins_dir.to_string_lossy().to_string());
             }
-        } // default to a plugins directory in the Application Support directory
+        }
 
         if std::env::var("RUN_MIGRATIONS").is_err() {
             std::env::set_var("RUN_MIGRATIONS", "true");
