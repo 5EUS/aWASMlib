@@ -1,6 +1,5 @@
+use std::path::PathBuf;
 use anyhow::Result;
-
-use crate::env::Config;
 
 /// Manages persistent storage of aggregated data
 pub struct Database {
@@ -8,7 +7,12 @@ pub struct Database {
 }
 
 impl Database {
-    pub async fn new(config: &Config) -> Result<Self> {
+    pub async fn new() -> Result<Self> {
         Ok(Database {})
+    }
+
+    pub async fn connect(&self, database_url: &PathBuf) -> Result<()> {
+        // TODO Implement connection logic here
+        Ok(())
     }
 }
