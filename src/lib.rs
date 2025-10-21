@@ -12,7 +12,7 @@ pub mod prelude {
 use crate::env::Config;
 use aggregator::Aggregator;
 
-use anyhow::{Result, bail, Context};
+use anyhow::{Result, bail};
 
 /// High-level handle to library functionality
 pub struct Handle {
@@ -33,27 +33,17 @@ impl Handle {
 
     /// Connect to the connection string specified in the configuration.
     pub async fn connect(&self) -> Result<()> {
-        if let Some(database_url) = &self.config.db_path {
-            self.agg.db
-                .connect(database_url)
-                .await
-                .context("Failed to connect to database")?;
-        } else {
-            bail!("No database URL configured");
+        match &self.config.db_path {
+            Some(database_url) => self.agg.db.connect(database_url).await,
+            None => bail!("No database URL configured"),
         }
-        Ok(())
     }
 
     /// Load plugins from the configured plugins directory.
     pub async fn load_plugins(&mut self) -> Result<()> {
-        if let Some(plugins_dir) = &self.config.plugins_dir {
-            self.agg.pm
-                .load_plugins_from_directory(plugins_dir)
-                .await
-                .context("Failed to load plugins from directory")?;
-        } else {
-            bail!("No plugins directory configured");
+        match &self.config.plugins_dir {
+            Some(plugins_dir) => self.agg.pm.load_plugins_from_directory(plugins_dir).await,
+            None => bail!("No plugins directory configured"),
         }
-        Ok(())
     }
 }
