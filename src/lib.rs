@@ -12,33 +12,47 @@ pub mod prelude {
 use crate::env::Config;
 use aggregator::Aggregator;
 
-use anyhow::Result;
+use anyhow::{Result, bail, Context};
 
 /// High-level handle to library functionality
 pub struct Handle {
-    pub rt: tokio::runtime::Runtime,
     pub agg: Aggregator,
     pub config: Config,
 }
 
 impl Handle {
-
     /// Create a new Handle with optional database URL and plugins directory.
     /// If database_url is None, the ApplicationSupport directory will be used.
     /// If plugins_dir is None, the ApplicationSupport directory will be used.
+    /// run_migrations defaults to true.
     pub async fn new() -> Result<Self> {
         let config = Config::new();
-        let rt = tokio::runtime::Builder::new_multi_thread()
-            .enable_all()
-            .build()?;
-        let agg = Aggregator::new(&config).await?;
-        Ok(Self { rt, agg, config })
+        let agg = Aggregator::new().await?;
+        Ok(Self { agg, config })
+    }
+
+    /// Connect to the connection string specified in the configuration.
+    pub async fn connect(&self) -> Result<()> {
+        if let Some(database_url) = &self.config.db_path {
+            self.agg.db
+                .connect(database_url)
+                .await
+                .context("Failed to connect to database")?;
+        } else {
+            bail!("No database URL configured");
+        }
+        Ok(())
     }
 
     /// Load plugins from the configured plugins directory.
     pub async fn load_plugins(&mut self) -> Result<()> {
         if let Some(plugins_dir) = &self.config.plugins_dir {
-            self.agg.pm.load_plugins_from_directory(plugins_dir).await?;
+            self.agg.pm
+                .load_plugins_from_directory(plugins_dir)
+                .await
+                .context("Failed to load plugins from directory")?;
+        } else {
+            bail!("No plugins directory configured");
         }
         Ok(())
     }
