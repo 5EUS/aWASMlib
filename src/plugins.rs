@@ -342,6 +342,7 @@ impl PluginManager {
             .collect()
     }
 
+    /// Get capabilities from all loaded plugins
     pub async fn get_all_capabilities(&self, _refresh: bool) -> Result<HashMap<String, ProviderCapabilities>> {
         let mut results = HashMap::new();
         for slot in &self.slots {
@@ -368,5 +369,20 @@ impl PluginManager {
             }
         }
         Ok(results)
+    }
+
+    /// Get allowed hosts from a specific plugin
+    pub async fn get_allowed_hosts(&self, plugin_name: &str) -> Result<Vec<String>> {
+        let slot = self.slots.iter().find(|s| s.name() == plugin_name)
+            .ok_or_else(|| anyhow!("plugin not found: {}", plugin_name))?;
+        let worker = slot.worker().await?;
+        let (reply_tx, reply_rx) = oneshot::channel();
+        let cmd = PluginCmd::GetAllowedHosts { reply: reply_tx };
+        worker.tx.send(cmd).await.map_err(|e| anyhow!("failed to send GetAllowedHosts command: {}", e))?;
+        match tokio::time::timeout(worker.call_timeout, reply_rx).await {
+            Ok(Ok(hosts)) => hosts,
+            Ok(Err(e)) => Err(anyhow!("plugin GetAllowedHosts error: {}", e)),
+            Err(_) => Err(anyhow!("GetAllowedHosts call timed out")),
+        }
     }
 }
