@@ -289,7 +289,7 @@ impl PluginManager {
             warn!("Plugin directory does not exist: {}", dir.display());
             return Ok(());
         }
-        let prefer_precompiled = !cfg!(target_os = "android");
+        let prefer_precompiled = cfg!(target_os = "ios");
         let mut artifacts_by_name: HashMap<String, ArtifactSet> = HashMap::new();
 
         for entry in std::fs::read_dir(dir)? {
