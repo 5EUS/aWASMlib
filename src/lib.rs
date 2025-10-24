@@ -39,7 +39,8 @@ impl Handle {
         }
     }
 
-    /// Load plugins from the configured plugins directory.
+    /// Load plugins from the configured plugins directory. Specifically, it registers each plugin artifact found
+    /// in the directory with the PluginManager for lazy loading.
     pub async fn load_plugins(&mut self) -> Result<()> {
         match &self.config.plugins_dir {
             Some(plugins_dir) => self.agg.pm.load_plugins_from_directory(plugins_dir).await,
