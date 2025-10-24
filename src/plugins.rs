@@ -341,4 +341,32 @@ impl PluginManager {
             .map(|slot| slot.name().to_string())
             .collect()
     }
+
+    pub async fn get_all_capabilities(&self, _refresh: bool) -> Result<HashMap<String, ProviderCapabilities>> {
+        let mut results = HashMap::new();
+        for slot in &self.slots {
+            let worker = slot.worker().await?;
+            let (reply_tx, reply_rx) = oneshot::channel();
+            let cmd = PluginCmd::GetCapabilities { reply: reply_tx };
+            if let Err(e) = worker.tx.send(cmd).await {
+                warn!(plugin=%slot.name(), "failed to send GetCapabilities command: {}", e);
+                continue;
+            }
+            match tokio::time::timeout(worker.call_timeout, reply_rx).await {
+                Ok(Ok(Ok(caps))) => {
+                    results.insert(slot.name().to_string(), caps);
+                }
+                Ok(Ok(Err(e))) => {
+                    warn!(plugin=%slot.name(), "plugin GetCapabilities error: {}", e);
+                }
+                Ok(Err(_)) => {
+                    warn!(plugin=%slot.name(), "GetCapabilities reply channel closed");
+                }
+                Err(_) => {
+                    warn!(plugin=%slot.name(), "GetCapabilities call timed out");
+                }
+            }
+        }
+        Ok(results)
+    }
 }
