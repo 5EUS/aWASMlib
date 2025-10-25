@@ -1,6 +1,7 @@
 pub mod aggregator;
 pub mod plugins;
 pub mod database;
+pub mod dao;
 pub mod env;
 /// Prelude re-exports commonly used types for easy import
 pub mod prelude {
@@ -22,21 +23,16 @@ pub struct Handle {
 
 impl Handle {
     /// Create a new Handle with optional database URL and plugins directory.
+    /// This initializes the underlying Aggregator and configuration, connects to the database,
+    /// and prepares the plugin manager.
     /// If database_url is None, the ApplicationSupport directory will be used.
     /// If plugins_dir is None, the ApplicationSupport directory will be used.
     /// run_migrations defaults to true.
-    pub async fn new() -> Result<Self> {
+    pub async fn new(&mut self) -> Result<Self> {
         let config = Config::new();
-        let agg = Aggregator::new().await?;
+        let agg = Aggregator::new(&config).await?;
+        self.load_plugins().await?;
         Ok(Self { agg, config })
-    }
-
-    /// Connect to the connection string specified in the configuration.
-    pub async fn connect(&self) -> Result<()> {
-        match &self.config.db_path {
-            Some(database_url) => self.agg.db.connect(database_url).await,
-            None => bail!("No database URL configured"),
-        }
     }
 
     /// Load plugins from the configured plugins directory. Specifically, it registers each plugin artifact found
