@@ -28,10 +28,9 @@ impl Handle {
     /// If database_url is None, the ApplicationSupport directory will be used.
     /// If plugins_dir is None, the ApplicationSupport directory will be used.
     /// run_migrations defaults to true.
-    pub async fn new(&mut self) -> Result<Self> {
+    pub async fn new() -> Result<Self> {
         let config = Config::new();
         let agg = Aggregator::new(&config).await?;
-        self.load_plugins().await?;
         Ok(Self { agg, config })
     }
 
