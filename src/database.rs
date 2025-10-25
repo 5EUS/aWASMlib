@@ -1,6 +1,5 @@
 use std::path::PathBuf;
 use anyhow::{Context, Result};
-use directories::ProjectDirs;
 use std::sync::Once;
 use sqlx::{any::{AnyConnectOptions, AnyPoolOptions}, migrate::Migrator, AnyPool, ConnectOptions};
 use std::str::FromStr;
@@ -18,17 +17,21 @@ pub struct Database {
 
 impl Database {
     /// Connect to the database at the given URL, or use a default sqlite path if None.
-    pub async fn connect(database_url: Option<&PathBuf>) -> Result<Self> {
+    pub async fn connect(database_url: &PathBuf) -> Result<Self> {
         
         INSTALL_DRIVERS.call_once(|| {
             sqlx::any::install_default_drivers();
         });
 
-        let url = match database_url.as_ref().and_then(|p| p.to_str()) {
-            Some(s) => s.to_string(),
-            None => default_sqlite_url()?,
-        }; 
+        let _ = std::fs::OpenOptions::new()
+            .create(true)
+            .write(true)
+            .open(database_url.to_string_lossy().to_string());
 
+        let url = format!(
+            "sqlite:///{}",
+            database_url.to_string_lossy().replace(' ', "%20")
+        );
         let options = AnyConnectOptions::from_str(&url)
             .with_context(|| format!("parsing database url: {}", url))?;
         let options = options.disable_statement_logging(); // quiet by default
@@ -77,30 +80,4 @@ impl Database {
         &self.pool
     }
     
-}
-
-
-fn default_sqlite_url() -> Result<String> {
-    let proj = ProjectDirs::from("com", "fiveeus", "awasmlib")
-        .context("unable to determine data directory for default sqlite path")?;
-    let mut path: PathBuf = proj.data_dir().to_path_buf();
-    std::fs::create_dir_all(&path)
-        .with_context(|| format!("creating data dir: {}", path.display()))?;
-    path.push("awasm.db");
-
-    if let Some(parent) = path.parent() {
-        std::fs::create_dir_all(parent)
-            .with_context(|| format!("creating db parent dir: {}", parent.display()))?;
-    }
-
-    let _ = std::fs::OpenOptions::new()
-        .create(true)
-        .write(true)
-        .open(&path);
-
-    let mut path_str = path.to_string_lossy().to_string();
-    if path_str.contains(' ') {
-        path_str = path_str.replace(' ', "%20");
-    }
-    Ok(format!("sqlite:///{path_str}?mode=rwc"))
 }

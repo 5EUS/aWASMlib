@@ -34,13 +34,13 @@ impl Config {
             if let Some(proj_dirs) = directories::ProjectDirs::from("com", "fiveeus", "aWASMlib") {
                 let app_support_dir = proj_dirs.data_dir();
                 std::fs::create_dir_all(app_support_dir).ok();
-                db_path = Some(app_support_dir.join("awasmlib.db"));
-                std::env::set_var("DATABASE_URL", format!("sqlite://{}", db_path.as_ref().unwrap().to_string_lossy()));
+                db_path = Some(app_support_dir.join("awasm.db"));
+                std::env::set_var("DATABASE_URL", db_path.as_ref().unwrap().to_string_lossy().to_string());
             } else {
                 // Fallback to a sensible default if ProjectDirs fails
-                let fallback_path = PathBuf::from("awasmlib.db");
+                let fallback_path = PathBuf::from("awasm.db");
                 db_path = Some(fallback_path.clone());
-                std::env::set_var("DATABASE_URL", format!("sqlite://{}", fallback_path.to_string_lossy()));
+                std::env::set_var("DATABASE_URL", fallback_path.to_string_lossy().to_string());
             }
         } // set default database URL if not set
 
