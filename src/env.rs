@@ -6,6 +6,8 @@ pub struct Config {
     pub db_path: Option<PathBuf>,
     pub plugins_dir: Option<PathBuf>,
     pub run_migrations: bool,
+    pub search_ttl_secs: u64,
+    pub pages_ttl_secs: u64,
 }
 
 impl Config {
@@ -14,6 +16,8 @@ impl Config {
         let mut db_path: Option<PathBuf> = None;
         let mut plugins_dir: Option<PathBuf> = None;
         let mut run_migrations = true; // default to true
+        let mut search_ttl_secs = 3600; // default to 1 hour
+        let mut pages_ttl_secs = 86400; // default to 24 hours
 
         let _ = fmt()
             .with_env_filter(EnvFilter::from_default_env())
@@ -38,7 +42,7 @@ impl Config {
                 db_path = Some(fallback_path.clone());
                 std::env::set_var("DATABASE_URL", format!("sqlite://{}", fallback_path.to_string_lossy()));
             }
-        }
+        } // set default database URL if not set
 
         if std::env::var("PLUGINS_DIR").is_err() {
             if let Some(proj_dirs) = directories::ProjectDirs::from("com", "fiveeus", "aWASMlib") {
@@ -52,7 +56,7 @@ impl Config {
                 std::fs::create_dir_all(&fallback_plugins_dir).ok();
                 std::env::set_var("PLUGINS_DIR", fallback_plugins_dir.to_string_lossy().to_string());
             }
-        }
+        } // set default plugins directory if not set
 
         if std::env::var("RUN_MIGRATIONS").is_err() {
             std::env::set_var("RUN_MIGRATIONS", "true");
@@ -61,6 +65,30 @@ impl Config {
             run_migrations = val == "true";
         } // determine whether to run migrations based on environment variable
 
-        Self { db_path, plugins_dir, run_migrations }
+        if std::env::var("AWASM_SEARCH_TTL_SECS").is_err() {
+            std::env::set_var("AWASM_SEARCH_TTL_SECS", "3600");
+            search_ttl_secs = 3600;
+        } else if let Ok(val) = std::env::var("AWASM_SEARCH_TTL_SECS") {
+            if let Ok(parsed) = val.parse::<u64>() {
+                search_ttl_secs = parsed;
+            }
+        } // set search TTL from environment variable if provided
+
+        if std::env::var("AWASM_PAGES_TTL_SECS").is_err() {
+            std::env::set_var("AWASM_PAGES_TTL_SECS", "86400");
+            pages_ttl_secs = 86400;
+        } else if let Ok(val) = std::env::var("AWASM_PAGES_TTL_SECS") {
+            if let Ok(parsed) = val.parse::<u64>() {
+                pages_ttl_secs = parsed;
+            }
+        } // set pages TTL from environment variable if provided
+
+        Self { 
+            db_path, 
+            plugins_dir, 
+            run_migrations, 
+            search_ttl_secs, 
+            pages_ttl_secs 
+        }
     }
 }
