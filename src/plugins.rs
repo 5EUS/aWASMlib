@@ -128,7 +128,7 @@ impl PluginSlot {
                         let _ = reply.send(plugin.fetch_assets(&unit_id));
                     }
                     PluginCmd::GetCapabilities { reply } => {
-                        let _ = reply.send(plugin.get_capabilities());
+                        let _ = reply.send(plugin.get_capabilities()); // TODO put in .toml
                     }
                     PluginCmd::GetAllowedHosts { reply } => {
                         let hosts = plugin.allowed_hosts.clone().unwrap_or_default();
@@ -346,7 +346,13 @@ impl PluginManager {
     pub async fn get_all_capabilities(&self, _refresh: bool) -> Result<HashMap<String, ProviderCapabilities>> {
         let mut results = HashMap::new();
         for slot in &self.slots {
-            let worker = slot.worker().await?;
+            let worker = match slot.worker().await {
+                Ok(worker) => worker,
+                Err(e) => {
+                    warn!(plugin=%slot.name(), error=%e, "failed to initialize plugin");
+                    continue;
+                }
+            };
             let (reply_tx, reply_rx) = oneshot::channel();
             let cmd = PluginCmd::GetCapabilities { reply: reply_tx };
             if let Err(e) = worker.tx.send(cmd).await {
