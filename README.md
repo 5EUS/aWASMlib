@@ -17,11 +17,11 @@ A high-performance, extensible media aggregation platform built with Rust and We
 
 ```
 ┌─────────────────┐    ┌──────────────────┐    ┌─────────────────┐
-│  Frontend Apps  │───▶│                  │───▶│  WASM Plugins   │
+│  Frontend Apps  │──▶│                  │──▶│  WASM Plugins   │
 │ (Dart/Flutter)  │    │   aWASM Backend  │    │                 │
 └─────────────────┘    │                  │    └─────────────────┘
 ┌─────────────────┐    │  ┌─────────────┐ │           │
-│   CLI Frontend  │───▶│  │   Plugin    │ │           ▼
+│   CLI Frontend  │──▶│  │   Plugin    │ │           ▼
 └─────────────────┘    │  │  Manager    │ │    ┌──────────────┐
                        │  └─────────────┘ │    │  WASI/HTTP   │
                        │  ┌─────────────┐ │    │  Sandboxing  │
