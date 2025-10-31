@@ -5,6 +5,7 @@ pub mod dao;
 pub mod env;
 /// Prelude re-exports commonly used types for easy import
 pub mod prelude {
+    pub use crate::Handle;
     pub use crate::aggregator::Aggregator;
     pub use crate::database::Database;
     pub use crate::plugins::*; // includes wit types
