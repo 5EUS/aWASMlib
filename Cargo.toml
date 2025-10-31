@@ -1,10 +1,7 @@
 [workspace]
 members = [
     ".", 
-    "crates/aWASMcli",
-    "crates/aWASMinterface",
-    "crates/aCWASMbuilder",
-    "crates/aWASM-mangadex"
+    "crates/*",
 ]
 
 [package]
