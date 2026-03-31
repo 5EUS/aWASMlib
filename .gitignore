@@ -21,3 +21,4 @@ Cargo.lock
 
 # Ignore plugins
 plugins
+.DS_Store
